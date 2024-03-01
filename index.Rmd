@@ -88,7 +88,7 @@ bind_rows(
 ***
 One of the coolest things I've found in pop music albums is tracks that include two songs inside it. These are curious to me because I never really understood how thay would decide on merging these tracks. Is it beacause they are similar?
 
-This is the case of  [Hard Feelings/Loveless](https://open.spotify.com/intl-es/track/6y6jbcPG4Yn3Du4moXaenr?si=1ccc365a763b4e35), a song that has a appeared in multiple of my Spotify Wrapped. The pink line shows the beginning of the transition to loveless. The transition begins with silence which is why the section is yellow/different.
+This is the case of  [Hard Feelings/Loveless](https://open.spotify.com/intl-es/track/1Dp7JGFNjvg8Nk0CtMCcnr?si=424b5686d0714e12), a song that has a appeared in multiple of my Spotify Wrapped. The pink line shows the beginning of the transition to loveless. The transition begins with silence which is why the section is yellow/different.
 
 
 ### Introduction

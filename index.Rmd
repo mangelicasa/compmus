@@ -1,0 +1,213 @@
+---
+title: "My teenage years in music"
+author: "Angélica Saglimbeni"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    self_contained: false
+    source: https://github.com/mangelicas/compmus/blob/main/index.Rmd
+    theme:
+      heading_font:
+        google: 
+          family: Rajdhani
+          wght: 700
+      base_font:
+        google: Fira Sans
+      code_font:
+        google: Fira Mono
+      bg: "#FFFFFF"
+      fg: "#212529" 
+      primary: "#FF69B4"
+      secondary: "#39d7b8"
+      success: "#39d7b8"
+      danger: "#fa5577"
+      warning: "#ffb14c"
+      info: "#0cc7f1"
+---
+
+```{r, setup}
+library(tidyverse)
+library(tidymodels)
+library(plotly)
+library(heatmaply)
+library(protoclust)
+library(cowplot)
+library(spotifyr)
+library(compmus)
+```
+
+### Two songs in one
+
+```{r, echo = FALSE, message = FALSE}
+hfl <-
+  get_tidy_audio_analysis("1Dp7JGFNjvg8Nk0CtMCcnr") |>
+  compmus_align(bars, segments) |>
+  select(bars) |>
+  unnest(bars) |>
+  mutate(
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "acentre", norm = "manhattan"
+      )
+  ) |>
+  mutate(
+    timbre =
+      map(segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  )
+bind_rows(
+  hfl |>
+    compmus_self_similarity(pitches, "aitchison") |>
+    mutate(d = d / max(d), type = "Chroma"),
+  hfl |>
+    compmus_self_similarity(timbre, "euclidean") |>
+    mutate(d = d / max(d), type = "Timbre")
+) |>
+  mutate() |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  geom_vline(xintercept = 220, colour = "pink") +
+  coord_fixed() +
+  facet_wrap(~type) +
+  scale_fill_viridis_c(guide = "none") +
+  theme_classic() +
+  labs(x = "", y = "")
+```
+
+***
+One of the coolest things I've found in pop music albums is tracks that include two songs inside it. These are curious to me because I never really understood how thay would decide on merging these tracks. Is it beacause they are similar?
+
+This is the case of  [Hard Feelings/Loveless](https://open.spotify.com/intl-es/track/6y6jbcPG4Yn3Du4moXaenr?si=1ccc365a763b4e35), a song that has a appeared in multiple of my Spotify Wrapped. The pink line shows the beginning of the transition to loveless. The transition begins with silence which is why the section is yellow/different.
+
+
+### Introduction
+
+For my corpus I am prospecting into teenage years. For this, I will be analyzing my Spotify Wrapped playlists from the years 2016 to 2023. As I approach my 20th birthday, this analysis serves as a reflective exploration of the music, emotions, and memories that defined my adolescence.
+
+By examining the music I listen to, I aim to explore the evolution of my musical tastes, emotional landscapes, and life experiences throughout my teenage years. Some questions I could answer are: did the pandemic change my music taste? How does falling in love change my music listening?
+
+Some limitations of this study are that especially in the first years Spotify Wrapped may not be completely representative as I would use other platforms to listen to music.
+
+Regarding genre, I think there will be a common factor in all the playlists: Pop music. This might be especially prevalent in 2016 as I was not actively trying to discover other genres. A special case is 2017. I remember I started to like Lofi a lot but after a while, I stopped listening to it so it might be reflected in energy or danceability measures.
+
+
+***
+
+Here is my 2017 Spotify Wrapped:
+
+<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1E9VL5ueCeO5ph?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+
+
+### Does growing older make you listen to calmer music?
+
+```{r}
+wrapped_2016 <- get_playlist_audio_features("","37i9dQZF1Cz0jkfxGY4C8b")
+wrapped_2017 <- get_playlist_audio_features("", "37i9dQZF1E9VL5ueCeO5ph")
+wrapped_2018 <- get_playlist_audio_features("", "37i9dQZF1EjyqcANxerWJE")
+wrapped_2019 <- get_playlist_audio_features("", "37i9dQZF1Etm167EF3Mo3c")
+wrapped_2020 <- get_playlist_audio_features("", "37i9dQZF1EMg5lB7AvOgEc")
+wrapped_2021 <- get_playlist_audio_features("", "45OyPM8dShcC7b029GQlQz")
+wrapped_2022 <- get_playlist_audio_features("", "3DhWDsDm1dtTyhSVfVRrKA")
+wrapped_2023 <- get_playlist_audio_features("", "1G5Xi8w1k6riJpEdO4oBfp")
+```
+
+```{r}
+wrapped_2016 <- wrapped_2016[!duplicated(wrapped_2016), ]
+
+```
+
+```{r}
+wrapped <-
+  bind_rows(
+    wrapped_2016 |> mutate(category = "2016"),
+    wrapped_2017 |> mutate(category = "2017"),
+    wrapped_2018 |> mutate(category = "2018"),
+    wrapped_2019 |> mutate(category = "2019"),
+    wrapped_2020 |> mutate(category = "2020"),
+    wrapped_2021 |> mutate(category = "2021"),
+    wrapped_2022 |> mutate(category = "2022"),
+    wrapped_2023 |> mutate(category = "2023"),
+  )
+```
+
+```{r}
+energy_gg <- wrapped |>
+  ggplot(aes(x = category, y = energy)) +
+  geom_boxplot(aes(fill = category)) +
+  theme(legend.position = "none") +
+  scale_fill_brewer(palette="PiYG") +
+  labs(
+    x = "year",
+    y = "energy",
+    title = "As I grow older I listen to less energetic music",
+    subtitle = "Energy in music thorughout the years",
+    caption = "Data from Spotify Wrapped"
+  ) 
+ggplotly(energy_gg)
+```
+
+***
+
+As we can see in the graph I've moved over to music with less energetic sound. This may be because as I keep growing older I prefer sound that is calmer. In addition it seems like 2016 is specially energetic. This might be because when I started using Soptify/listening to music I only listened to pop music which is usually energetic. 
+
+### Rediscovering a song through a remix
+
+```{r}
+## Original
+idc <-
+  get_tidy_audio_analysis("6y6jbcPG4Yn3Du4moXaenr") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+## Remix
+idc_remix <-
+  get_tidy_audio_analysis("1wsZ0cp5He4Wm4yohNjwIs") |>
+  select(segments) |>
+  unnest(segments) |>
+  select(start, duration, pitches)
+```
+
+```{r}
+compmus_long_distance(
+  idc |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  idc_remix |> mutate(pitches = map(pitches, compmus_normalise, "chebyshev")),
+  feature = pitches,
+  method = "euclidean"
+) |>
+  ggplot(
+    aes(
+      x = xstart + xduration / 2,
+      width = xduration,
+      y = ystart + yduration / 2,
+      height = yduration,
+      fill = d
+    )
+  ) +
+  geom_tile() +
+  coord_equal() +
+  geom_vline(xintercept = 50, colour = "pink") +
+  geom_vline(xintercept = 100, colour = "pink") +
+  labs(x = "Original",
+       y = "Remix",
+       title = "How similar are the chromas?",
+       caption = "Data from Spotify Wrapped") +
+  scale_fill_viridis_c(guide = NULL)
+```
+
+
+***
+
+When looking through all the songs from all the years I found out a [song](https://open.spotify.com/intl-es/track/6y6jbcPG4Yn3Du4moXaenr?si=1ccc365a763b4e35) and its [remix](https://open.spotify.com/intl-es/track/1wsZ0cp5He4Wm4yohNjwIs?si=614241e7ec424b23) in different years: 2017 and 2021.
+
+I wanted to find it how similar the time frames were. And, as we can see, thay are almost complete different, except the segment between the lines.

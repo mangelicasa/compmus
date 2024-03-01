@@ -1,4 +1,4 @@
-#compmus
+# compmus
 ## corpus
 For my corpus I am prospecting into teenage years. For this, I will be analyzing my Spotify Wrapped playlists from the years 2016 to 2023. As I approach my 20th birthday, this analysis serves as a reflective exploration of the music, emotions, and memories that defined my adolescence.
 

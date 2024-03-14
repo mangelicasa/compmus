@@ -1,5 +1,5 @@
 # compmus
-## corpus
+## Corpus
 For my corpus I am prospecting into teenage years. For this, I will be analyzing my Spotify Wrapped playlists from the years 2016 to 2023. As I approach my 20th birthday, this analysis serves as a reflective exploration of the music, emotions, and memories that defined my adolescence.
 
 By examining the music I listen to, I aim to explore the evolution of my musical tastes, emotional landscapes, and life experiences throughout my teenage years. Some questions I could answer are: did the pandemic change my music taste? How does falling in love change my music listening?

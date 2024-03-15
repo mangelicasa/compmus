@@ -52,21 +52,9 @@ plantasia |>
   theme_classic()
 ```
 
-```{r}
-plantasia |>
-  tempogram(window_size = 8, hop_size = 1, cyclic = TRUE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
-```
-
 ***
 During the lockdown for COVID19, I got really into music for growing plants. This ended up being reflected in my 2020 Wrapped. With the example of 
-[Plantasia](https://open.spotify.com/intl-es/track/2XV5CUyw7gPVi18d718D4f?si=e5a10490b1f7464d) I was surprised to see the average tempo is 350 bpm, which really surprised me. It seems tho that it is just taking multiples of the actual tempo.
-
-As we can see in the second graph the actual tempo is arounf 88bpm, which is closer to a slower tempo that I expected for music for growing plants.
+[Plantasia](https://open.spotify.com/intl-es/track/2XV5CUyw7gPVi18d718D4f?si=e5a10490b1f7464d) I was surprised to see the average tempo is 350 bpm, which really surprised me. It seems tho that it is just taking multiples of the actual tempo. The actual tempo would most likely be 88bpm, which is closer to a slower tempo that I expected for music for growing plants.
 
 ### Introduction
 
@@ -86,7 +74,7 @@ Here is my 2017 Spotify Wrapped:
 <iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1E9VL5ueCeO5ph?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
 
 
-### A first Overview
+### The key to my heart
 
 ```{r}
 wrapped_2016 <- get_playlist_audio_features("","37i9dQZF1Cz0jkfxGY4C8b")
@@ -118,10 +106,7 @@ wrapped <-
   )
 ```
 
-Column {.tabset}
------------------------------------------------------------------------
 
-### The key to my heart
 ```{r}
 key_labels <- c("C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B")
 
@@ -148,40 +133,12 @@ key_hist <- ggplot(wrapped, aes(x = factor(key, labels = key_labels), fill = cat
     strip.text.x = element_text(hjust = 0) # Adjust horizontal placement of strip text
   )
 
-```
-
-Column {.tabset}
------------------------------------------------------------------------
-
-### Hold the tempo
-```{r}
-tempo_hist <- ggplot(wrapped, aes(x = factor(tempo, fill = category))) +
-  geom_bar(stat = "count", position = "identity", alpha = 0.7) +
-  facet_wrap(~ category, nrow = 3, scales = "free_x") +
-  theme(legend.position = "none") +
-  scale_fill_brewer(palette = "PiYG") +
-  labs(title = "Histogram of Tempo of Songs for Each Year",
-       x = "Tempo",
-       y = "Frequency") +
-  theme_minimal() +
-  theme(
-    # Adjusting plot size
-    plot.title = element_text(size = 16),
-    axis.title.x = element_text(size = 14),
-    axis.title.y = element_text(size = 14),
-    axis.text.x = element_text(size = 12),
-    axis.text.y = element_text(size = 12),
-    strip.text = element_text(size = 14),
-    panel.spacing.x = unit(2, "lines"), 
-    strip.background = element_blank(),
-    strip.placement = "outside", 
-    strip.text.x = element_text(hjust = 0)
-  )
+key_hist 
 
 ```
 
 ***
-Commentary goes here.
+It seems like the most frequent key on my favourite songs is C, which makes sense as its the most common key in pop musi.
 
 
 ### Does growing older make you listen to calmer music?

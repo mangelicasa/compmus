@@ -3,7 +3,6 @@ title: "My teenage years in music"
 author: "Angélica Saglimbeni"
 output: 
   flexdashboard::flex_dashboard:
-    storyboard: true
     self_contained: false
     source: https://github.com/mangelicas/compmus/blob/main/index.Rmd
     theme:
@@ -25,56 +24,42 @@ output:
       info: "#0cc7f1"
 ---
 
+
 ```{r, setup}
 library(tidyverse)
 library(tidymodels)
 library(plotly)
+library(ggdendro)
 library(heatmaply)
 library(protoclust)
 library(cowplot)
 library(spotifyr)
 library(compmus)
+
+thematic::thematic_rmd(font = "auto")
 ```
 
-### Tempo for growing plants
+Overview of song clusters
+=====================================
+Column {.tabset data-width=1000}
+-------------------------------------
+```{r, results = 'hide'}
+get_conf_mat <- function(fit) {
+  outcome <- .get_tune_outcome_names(fit)
+  fit |> 
+    collect_predictions() |> 
+    conf_mat(truth = outcome, estimate = .pred_class)
+}  
 
-```{r}
-plantasia <- get_tidy_audio_analysis("4CyTrR4c13d57jCVstfS8T")
+get_pr <- function(fit) {
+  fit |> 
+    conf_mat_resampled() |> 
+    group_by(Prediction) |> mutate(precision = Freq / sum(Freq)) |> 
+    group_by(Truth) |> mutate(recall = Freq / sum(Freq)) |> 
+    ungroup() |> filter(Prediction == Truth) |> 
+    select(class = Prediction, precision, recall)
+}  
 ```
-
-```{r}
-plantasia |>
-  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
-  ggplot(aes(x = time, y = bpm, fill = power)) +
-  geom_raster() +
-  scale_fill_viridis_c(guide = "none") +
-  labs(x = "Time (s)", y = "Tempo (BPM)") +
-  theme_classic()
-```
-
-***
-During the lockdown for COVID19, I got really into music for growing plants. This ended up being reflected in my 2020 Wrapped. With the example of 
-[Plantasia](https://open.spotify.com/intl-es/track/2XV5CUyw7gPVi18d718D4f?si=e5a10490b1f7464d) I was surprised to see the average tempo is 350 bpm, which really surprised me. It seems tho that it is just taking multiples of the actual tempo. The actual tempo would most likely be 88bpm, which is closer to a slower tempo that I expected for music for growing plants.
-
-### Introduction
-
-For my corpus I am prospecting into teenage years. For this, I will be analyzing my Spotify Wrapped playlists from the years 2016 to 2023. As I approach my 20th birthday, this analysis serves as a reflective exploration of the music, emotions, and memories that defined my adolescence.
-
-By examining the music I listen to, I aim to explore the evolution of my musical tastes, emotional landscapes, and life experiences throughout my teenage years. Some questions I could answer are: did the pandemic change my music taste? How does falling in love change my music listening?
-
-Some limitations of this study are that especially in the first years Spotify Wrapped may not be completely representative as I would use other platforms to listen to music.
-
-Regarding genre, I think there will be a common factor in all the playlists: Pop music. This might be especially prevalent in 2016 as I was not actively trying to discover other genres. A special case is 2017. I remember I started to like Lofi a lot but after a while, I stopped listening to it so it might be reflected in energy or danceability measures.
-
-
-***
-
-Here is my 2017 Spotify Wrapped:
-
-<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1E9VL5ueCeO5ph?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
-
-
-### The key to my heart
 
 ```{r}
 wrapped_2016 <- get_playlist_audio_features("","37i9dQZF1Cz0jkfxGY4C8b")
@@ -104,8 +89,85 @@ wrapped <-
     wrapped_2022 |> mutate(category = "2022"),
     wrapped_2023 |> mutate(category = "2023"),
   )
+
 ```
 
+### Wrapped 2020 Clusters
+```{r}
+wrapped_2020 <-
+  get_playlist_audio_features("", "37i9dQZF1EMg5lB7AvOgEc") |>
+  add_audio_analysis() |>
+  mutate(
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  ) |>
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) |>
+  mutate_at(vars(pitches, timbre), map, bind_rows) |>
+  unnest(cols = c(pitches, timbre))
+```
+
+### Wrapped 2022 Clusters
+```{r}
+wrapped_2022 <-
+  get_playlist_audio_features("", "37i9dQZF1EMg5lB7AvOgEc") |>
+  add_audio_analysis() |>
+  mutate(
+    segments = map2(segments, key, compmus_c_transpose),
+    pitches =
+      map(segments,
+        compmus_summarise, pitches,
+        method = "mean", norm = "manhattan"
+      ),
+    timbre =
+      map(
+        segments,
+        compmus_summarise, timbre,
+        method = "mean"
+      )
+  ) |>
+  mutate(pitches = map(pitches, compmus_normalise, "clr")) |>
+  mutate_at(vars(pitches, timbre), map, bind_rows) |>
+  unnest(cols = c(pitches, timbre))
+```
+
+Column {.sidebar data-width=300}
+-------------------------------------
+Commentary goes here
+
+Introduction
+=====================================
+Column {data-width=1000}
+-------------------------------------
+For my corpus I am prospecting into teenage years. For this, I will be analyzing my Spotify Wrapped playlists from the years 2016 to 2023. As I approach my 20th birthday, this analysis serves as a reflective exploration of the music, emotions, and memories that defined my adolescence.
+
+By examining the music I listen to, I aim to explore the evolution of my musical tastes, emotional landscapes, and life experiences throughout my teenage years. Some questions I could answer are: did the pandemic change my music taste? How does falling in love change my music listening?
+
+Some limitations of this study are that especially in the first years Spotify Wrapped may not be completely representative as I would use other platforms to listen to music.
+
+Regarding genre, I think there will be a common factor in all the playlists: Pop music. This might be especially prevalent in 2016 as I was not actively trying to discover other genres. A special case is 2017. I remember I started to like Lofi a lot but after a while, I stopped listening to it so it might be reflected in energy or danceability measures.
+
+
+Column {.sidebar data-width=300}
+-------------------------------------
+
+Here is my 2017 Spotify Wrapped:
+
+<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1E9VL5ueCeO5ph?utm_source=generator" width="100%" height="380" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+
+
+The key to my heart
+=====================================
+Column {data-width=1000}
 
 ```{r}
 key_labels <- c("C", "C♯/D♭", "D", "D♯/E♭", "E", "F", "F♯/G♭", "G", "G♯/A♭", "A", "A♯/B♭", "B")
@@ -137,11 +199,15 @@ key_hist
 
 ```
 
-***
+Column {.sidebar data-width=300}
+-------------------------------------
 It seems like the most frequent key on my favourite songs is C, which makes sense as its the most common key in pop musi.
 
 
-### Does growing older make you listen to calmer music?
+Does growing older make you listen to calmer music?
+=====================================
+Column {data-width=1000}
+-------------------------------------
 
 ```{r}
 energy_gg <- wrapped |>
@@ -159,12 +225,14 @@ energy_gg <- wrapped |>
 ggplotly(energy_gg)
 ```
 
-***
-
+Column {.sidebar data-width=300}
+-------------------------------------
 As we can see in the graph I've moved over to music with less energetic sound. This may be because as I keep growing older I prefer sound that is calmer. In addition it seems like 2016 is specially energetic. This might be because when I started using Soptify/listening to music I only listened to pop music which is usually energetic. 
 
-### Rediscovering a song through a remix
-
+Rediscovering a song through a remix
+=====================================
+Column {data-width=1000}
+-------------------------------------
 ```{r}
 ## Original
 idc <-
@@ -208,14 +276,17 @@ compmus_long_distance(
 ```
 
 
-***
+Column {.sidebar data-width=300}
+-------------------------------------
 
 When looking through all the songs from all the years I found out a [song](https://open.spotify.com/intl-es/track/6y6jbcPG4Yn3Du4moXaenr?si=1ccc365a763b4e35) and its [remix](https://open.spotify.com/intl-es/track/1wsZ0cp5He4Wm4yohNjwIs?si=614241e7ec424b23) in different years: 2017 and 2021.
 
 I wanted to find it how similar the time frames were. And, as we can see, thay are almost complete different, except the segment between the lines.
 
-### Two songs in one
-
+Two songs in one
+=====================================
+Column {data-width=1000}
+-------------------------------------
 ```{r, echo = FALSE, message = FALSE}
 hfl <-
   get_tidy_audio_analysis("1Dp7JGFNjvg8Nk0CtMCcnr") |>
@@ -263,12 +334,16 @@ bind_rows(
   labs(x = "", y = "")
 ```
 
-***
+Column {.sidebar data-width=300}
+-------------------------------------
 One of the coolest things I've found in pop music albums is tracks that include two songs inside it. These are curious to me because I never really understood how thay would decide on merging these tracks. Is it beacause they are similar?
 
 This is the case of  [Hard Feelings/Loveless](https://open.spotify.com/intl-es/track/1Dp7JGFNjvg8Nk0CtMCcnr?si=424b5686d0714e12), a song that has a appeared in multiple of my Spotify Wrapped. The pink line shows the beginning of the transition to loveless. The transition begins with silence which is why the section is yellow/different.
 
-### An emotional rollercoaster
+An emotional rollercoaster
+=====================================
+Column {data-width=1000}
+-------------------------------------
 ```{r, echo=FALSE}
 circshift <- function(v, n) {
   if (n == 0) v else c(tail(v, n), head(v, -n))
@@ -346,5 +421,30 @@ smb |>
   labs(x = "Time (s)", y = "")
 ```
 
-***
+Column {.sidebar data-width=300}
+-------------------------------------
 During some of my teenage years I did Musical Theatre. In 2020 we performed the musical Legally Blonde, which due to practising also appeared in my Spotify wrapped that year. I will be analysing my favourite song in the musical:[So Much Better](https://open.spotify.com/intl-es/track/3nfMOTjl5Ts1GZScRKuQnF?si=2928dbd0923940ae). I have this memory of my teacher explaining that the song had 10 key changes to reflect the rollercoaster of emotions Elle (the protagosnist) was going through.
+
+Tempo for growing plants
+=====================================
+Column {data-width=1000}
+-------------------------------------
+
+```{r}
+plantasia <- get_tidy_audio_analysis("4CyTrR4c13d57jCVstfS8T")
+```
+
+```{r}
+plantasia |>
+  tempogram(window_size = 8, hop_size = 1, cyclic = FALSE) |>
+  ggplot(aes(x = time, y = bpm, fill = power)) +
+  geom_raster() +
+  scale_fill_viridis_c(guide = "none") +
+  labs(x = "Time (s)", y = "Tempo (BPM)") +
+  theme_classic()
+```
+
+Column {.sidebar data-width=300}
+-------------------------------------
+During the lockdown for COVID19, I got really into music for growing plants. This ended up being reflected in my 2020 Wrapped. With the example of 
+[Plantasia](https://open.spotify.com/intl-es/track/2XV5CUyw7gPVi18d718D4f?si=e5a10490b1f7464d) I was surprised to see the average tempo is 350 bpm, which really surprised me. It seems tho that it is just taking multiples of the actual tempo. The actual tempo would most likely be 88bpm, which is closer to a slower tempo that I expected for music for growing plants.
